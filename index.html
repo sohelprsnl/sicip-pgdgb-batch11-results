@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>IBA-DU PGDGB Batch 11 — Result Checker</title>
+<style>
+  :root{
+    --green:#1b5e20; --green2:#2e7d32; --light:#e8f5e9; --border:#c8e6c9;
+    --red:#c62828; --amber:#ef6c00; --text:#212121; --muted:#616161;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:Segoe UI, Arial, sans-serif; background:#f1f4f1; color:var(--text);}
+  header{background:linear-gradient(135deg,var(--green),var(--green2)); color:#fff; padding:22px 16px; text-align:center;}
+  header h1{font-size:1.45rem; letter-spacing:.3px;}
+  header p{opacity:.92; margin-top:4px; font-size:.95rem;}
+  .wrap{max-width:860px; margin:24px auto; padding:0 14px;}
+  .card{background:#fff; border:1px solid var(--border); border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.06); overflow:hidden; margin-bottom:22px;}
+  .card-h{background:var(--light); padding:12px 18px; font-weight:600; color:var(--green); border-bottom:1px solid var(--border);}
+  .card-b{padding:20px 18px;}
+  label{display:block; font-size:.88rem; font-weight:600; margin-bottom:5px; color:var(--muted);}
+  input{width:100%; padding:11px 12px; font-size:1rem; border:1px solid #bdbdbd; border-radius:6px;}
+  input:focus{outline:2px solid var(--green2); border-color:var(--green2);}
+  .row{display:flex; gap:14px; flex-wrap:wrap;}
+  .row>div{flex:1 1 240px;}
+  button{margin-top:16px; background:var(--green2); color:#fff; border:0; padding:12px 30px; font-size:1rem; font-weight:600; border-radius:6px; cursor:pointer;}
+  button:hover{background:var(--green);}
+  .err{display:none; margin-top:14px; padding:11px 14px; background:#ffebee; border:1px solid #ef9a9a; color:var(--red); border-radius:6px; font-size:.93rem;}
+  .hint{font-size:.8rem; color:var(--muted); margin-top:4px;}
+  #result{display:none;}
+  .info{display:grid; grid-template-columns:1fr 1fr; gap:8px 24px; padding:16px 18px; font-size:.95rem;}
+  .info div span{color:var(--muted); font-size:.82rem; display:block;}
+  .info div b{font-size:1.02rem;}
+  table{width:100%; border-collapse:collapse; font-size:.92rem;}
+  th,td{border:1px solid var(--border); padding:9px 10px; text-align:center;}
+  th{background:var(--light); color:var(--green); font-size:.84rem;}
+  td.l{text-align:left;}
+  .mod{background:#f5faf5; font-weight:600; color:var(--green); text-align:left;}
+  .pend{color:var(--amber); font-style:italic;}
+  .cgpa{background:var(--green); color:#fff; text-align:center; padding:16px;}
+  .cgpa b{font-size:1.9rem; display:block;}
+  .toolbar{text-align:right; padding:10px 18px;}
+  .toolbar button{margin:0 0 0 8px; padding:8px 18px; font-size:.9rem;}
+  .toolbar .sec{background:#fff; color:var(--green); border:1px solid var(--green2);}
+  footer{text-align:center; color:var(--muted); font-size:.8rem; padding:20px;}
+  @media print{
+    header,#searchCard,.toolbar,footer{display:none!important;}
+    body{background:#fff;} .card{border:none; box-shadow:none;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Institute of Business Administration, University of Dhaka</h1>
+  <p>PGDGB — Batch 11 (2025) &nbsp;•&nbsp; Online Result Checker</p>
+</header>
+
+<div class="wrap">
+  <div class="card" id="searchCard">
+    <div class="card-h">Check Your Result</div>
+    <div class="card-b">
+      <form id="form" autocomplete="off">
+        <div class="row">
+          <div>
+            <label for="roll">Roll No</label>
+            <input id="roll" inputmode="numeric" placeholder="e.g. 251110006" required>
+          </div>
+          <div>
+            <label for="nm">Your Name (verification)</label>
+            <input id="nm" placeholder="Type your name as registered" required>
+            <div class="hint">At least 4 letters of your registered name.</div>
+          </div>
+        </div>
+        <button type="submit">View Result</button>
+        <div class="err" id="err"></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card" id="result">
+    <div class="card-h">Academic Transcript / Marksheet</div>
+    <div class="info">
+      <div><span>Name of the Student</span><b id="rName"></b></div>
+      <div><span>Roll No</span><b id="rRoll"></b></div>
+      <div><span>Batch</span><b id="rBatch"></b></div>
+      <div><span>Programme</span><b>PGDGB, IBA-DU</b></div>
+    </div>
+    <div class="card-b" style="padding-top:0">
+      <table>
+        <thead>
+          <tr><th style="text-align:left">Course</th><th>Credit</th><th>Marks</th><th>Grade</th><th>Grade Point</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="cgpa">CGPA (completed courses)<b id="rCgpa"></b></div>
+    <div class="toolbar">
+      <button class="sec" type="button" onclick="reset_()">New Search</button>
+      <button type="button" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+
+  <footer>Results are provisional and subject to correction by the programme office.<br>© 2025–2026 IBA-DU PGDGB Batch 11</footer>
+</div>
+
+<script>
+const DATA = {"meta":{"courses":[{"code":"ACC 501","title":"Accounting for Managers","module":"One","credit":2},{"code":"MKM 501","title":"Marketing Management","module":"One","credit":2},{"code":"MPO 501","title":"Managing People and Organization","module":"One","credit":2},{"code":"BC 501","title":"Business Communication","module":"One","credit":2},{"code":"FM 501","title":"Financial Management","module":"One","credit":2},{"code":"BS","title":"Business Strategy and Innovation","module":"Two","credit":2},{"code":"MC","title":"Managerial Communication for RMG","module":"Three","credit":2},{"code":"BA","title":"Business Analytics","module":"Three","credit":2},{"code":"IMT","title":"Industry Module","module":"Two","credit":8},{"code":"IAA","title":"Industry Attachment, Report & Defense","module":"Three","credit":6}]},"students":[{"roll":"251110006","batch":"B11","name":"Md. Ashikur Rahman","courses":[{"m":78,"g":"A","p":3.75},{"m":76,"g":"A","p":3.75},{"m":72,"g":"A-","p":3.5},{"m":65,"g":"B+","p":3.25},{"m":59.4,"g":"B","p":3},{"m":71,"g":"A-","p":3.5},{"m":85,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.54},{"roll":"251112615","batch":"B11","name":"Md. Sheikh Arafat","courses":[{"m":60,"g":"B","p":3},{"m":58,"g":"B-","p":2.75},{"m":68,"g":"B+","p":3.25},{"m":70,"g":"A-","p":3.5},{"m":43.8,"g":"D","p":2},{"m":68,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.11},{"roll":"251110059","batch":"B11","name":"Md. Dipu Hossain","courses":[{"m":81,"g":"A+","p":4},{"m":73,"g":"A-","p":3.5},{"m":63,"g":"B","p":3},{"m":65,"g":"B+","p":3.25},{"m":63.8,"g":"B","p":3},{"m":60,"g":"B","p":3},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.39},{"roll":"251110146","batch":"B11","name":"Md. Faridul Islam","courses":[{"m":40,"g":"D","p":2},{"m":73,"g":"A-","p":3.5},{"m":64,"g":"B","p":3},{"m":70,"g":"A-","p":3.5},{"m":42.5,"g":"D","p":2},{"m":69,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.04},{"roll":"251110166","batch":"B11","name":"Mahfuz Alam","courses":[{"m":94,"g":"A+","p":4},{"m":75,"g":"A","p":3.75},{"m":53,"g":"C+","p":2.5},{"m":75,"g":"A","p":3.75},{"m":76.3,"g":"A","p":3.75},{"m":80,"g":"A+","p":4},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.68},{"roll":"251110190","batch":"B11","name":"Sharmin Akter Kanta","courses":[{"m":72,"g":"A-","p":3.5},{"m":68,"g":"B+","p":3.25},{"m":51,"g":"C+","p":2.5},{"m":75,"g":"A","p":3.75},{"m":41.3,"g":"D","p":2},{"m":56,"g":"B-","p":2.75},{"m":96,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.11},{"roll":"251110214","batch":"B11","name":"Md. Sohel Rana","courses":[{"m":77,"g":"A","p":3.75},{"m":73,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":75,"g":"A","p":3.75},{"m":65,"g":"B+","p":3.25},{"m":70,"g":"A-","p":3.5},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.64},{"roll":"251110284","batch":"B11","name":"Mahmudul Hoque","courses":[{"m":55,"g":"B-","p":2.75},{"m":68,"g":"B+","p":3.25},{"m":65,"g":"B+","p":3.25},{"m":70,"g":"A-","p":3.5},{"m":50,"g":"C+","p":2.5},{"m":74,"g":"A-","p":3.5},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.25},{"roll":"251110309","batch":"B11","name":"Imranul Islam Hridoy","courses":[{"m":92.5,"g":"A+","p":4},{"m":73,"g":"A-","p":3.5},{"m":62,"g":"B","p":3},{"m":75,"g":"A","p":3.75},{"m":66.9,"g":"B+","p":3.25},{"m":78,"g":"A","p":3.75},{"m":75,"g":"A","p":3.75},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.57},{"roll":"251110418","batch":"B11","name":"Umme Qulsum Moni","courses":[{"m":86,"g":"A+","p":4},{"m":73,"g":"A-","p":3.5},{"m":72,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":72.5,"g":"A-","p":3.5},{"m":58,"g":"B-","p":2.75},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.57},{"roll":"251110424","batch":"B11","name":"Aakash Chanda","courses":[{"m":81,"g":"A+","p":4},{"m":62,"g":"B","p":3},{"m":75,"g":"A","p":3.75},{"m":80,"g":"A+","p":4},{"m":42.5,"g":"D","p":2},{"m":78,"g":"A","p":3.75},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.5},{"roll":"251110485","batch":"B11","name":"Md. Moshihor Rahman","courses":[{"m":51.5,"g":"C+","p":2.5},{"m":65,"g":"B+","p":3.25},{"m":65,"g":"B+","p":3.25},{"m":75,"g":"A","p":3.75},{"m":40,"g":"D","p":2},{"m":74,"g":"A-","p":3.5},{"m":60,"g":"B","p":3},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.04},{"roll":"251110530","batch":"B11","name":"Jannatul Ferdouse","courses":[{"m":40,"g":"D","p":2},{"m":65,"g":"B+","p":3.25},{"m":63,"g":"B","p":3},{"m":65,"g":"B+","p":3.25},{"m":40.6,"g":"D","p":2},{"m":71,"g":"A-","p":3.5},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.0},{"roll":"251110557","batch":"B11","name":"Mohammad Hamed Hasan Mustakim","courses":[{"m":75,"g":"A","p":3.75},{"m":76,"g":"A","p":3.75},{"m":63,"g":"B","p":3},{"m":75,"g":"A","p":3.75},{"m":53.8,"g":"C+","p":2.5},{"m":69,"g":"B+","p":3.25},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.43},{"roll":"251110631","batch":"B11","name":"Nur-E-Shaba Nishita","courses":[{"m":65,"g":"B+","p":3.25},{"m":75,"g":"A","p":3.75},{"m":65,"g":"B+","p":3.25},{"m":60,"g":"B","p":3},{"m":70,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.5},{"roll":"251110824","batch":"B11","name":"Md. Al Amin","courses":[{"m":91,"g":"A+","p":4},{"m":65,"g":"B+","p":3.25},{"m":72,"g":"A-","p":3.5},{"m":80,"g":"A+","p":4},{"m":40,"g":"D","p":2},{"m":69,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.43},{"roll":"251110861","batch":"B11","name":"Roksana Akter","courses":[{"m":42.5,"g":"D","p":2},{"m":73,"g":"A-","p":3.5},{"m":67,"g":"B+","p":3.25},{"m":80,"g":"A+","p":4},{"m":63.8,"g":"B","p":3},{"m":58,"g":"B-","p":2.75},{"m":85,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.21},{"roll":"251110869","batch":"B11","name":"Md. Mazharul-Islam","courses":[{"m":40.5,"g":"D","p":2},{"m":73,"g":"A-","p":3.5},{"m":65,"g":"B+","p":3.25},{"m":65,"g":"B+","p":3.25},{"m":53.8,"g":"C+","p":2.5},{"m":67,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.11},{"roll":"251111010","batch":"B11","name":"Fajlay Azim","courses":[{"m":75,"g":"A","p":3.75},{"m":46,"g":"C","p":2.25},{"m":68,"g":"B+","p":3.25},{"m":60,"g":"B","p":3},{"m":46,"g":"C","p":2.25},{"m":67,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.11},{"roll":"251111015","batch":"B11","name":"Md. Saiful Islam","courses":[{"m":68,"g":"B+","p":3.25},{"m":66,"g":"B+","p":3.25},{"m":66,"g":"B+","p":3.25},{"m":65,"g":"B+","p":3.25},{"m":61.3,"g":"B","p":3},{"m":75,"g":"A","p":3.75},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.39},{"roll":"251111089","batch":"B11","name":"Samia Afrin Nidhi","courses":[{"m":61,"g":"B","p":3},{"m":58,"g":"B-","p":2.75},{"m":58,"g":"B-","p":2.75},{"m":65,"g":"B+","p":3.25},{"m":40,"g":"D","p":2},{"m":61,"g":"B","p":3},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":2.96},{"roll":"251111090","batch":"B11","name":"Md. Shohag","courses":[{"m":63,"g":"B","p":3},{"m":62,"g":"B","p":3},{"m":62,"g":"B","p":3},{"m":60,"g":"B","p":3},{"m":40,"g":"D","p":2},{"m":66,"g":"B+","p":3.25},{"m":50,"g":"C","p":2.25},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":2.79},{"roll":"251111135","batch":"B11","name":"Md. Asaduzzaman","courses":[{"m":60,"g":"B","p":3},{"m":58,"g":"B-","p":2.75},{"m":65,"g":"B+","p":3.25},{"m":75,"g":"A","p":3.75},{"m":58.1,"g":"B-","p":2.75},{"m":66,"g":"B+","p":3.25},{"m":20,"g":"F","p":0},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":2.68},{"roll":"251111328","batch":"B11","name":"Md. M. H. Abu Taher","courses":[{"m":92,"g":"A+","p":4},{"m":77,"g":"A","p":3.75},{"m":70,"g":"A-","p":3.5},{"m":50,"g":"C+","p":2.5},{"m":79.4,"g":"A","p":3.75},{"m":81,"g":"A+","p":4},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.64},{"roll":"251111511","batch":"B11","name":"Basim Daiyan Dipon","courses":[{"m":46,"g":"C","p":2.25},{"m":70,"g":"A-","p":3.5},{"m":63,"g":"B","p":3},{"m":70,"g":"A-","p":3.5},{"m":70,"g":"A-","p":3.5},{"m":74,"g":"A-","p":3.5},{"m":70,"g":"A-","p":3.5},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.25},{"roll":"251111575","batch":"B11","name":"Rakibul Hasan","courses":[{"m":92,"g":"A+","p":4},{"m":67,"g":"B+","p":3.25},{"m":65,"g":"B+","p":3.25},{"m":80,"g":"A+","p":4},{"m":61.3,"g":"B","p":3},{"m":72,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.54},{"roll":"251111576","batch":"B11","name":"Md Imran Hossain","courses":[{"m":93,"g":"A+","p":4},{"m":75,"g":"A","p":3.75},{"m":72,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":40,"g":"D","p":2},{"m":66,"g":"B+","p":3.25},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.46},{"roll":"251111672","batch":"B11","name":"Shamsul Arefin","courses":[{"m":76.5,"g":"A","p":3.75},{"m":72,"g":"A-","p":3.5},{"m":68,"g":"B+","p":3.25},{"m":75,"g":"A","p":3.75},{"m":45,"g":"C","p":2.25},{"m":80,"g":"A+","p":4},{"m":80,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.5},{"roll":"251111701","batch":"B11","name":"Mohammad Kaesul Kabir Azad","courses":[{"m":73,"g":"A-","p":3.5},{"m":76,"g":"A","p":3.75},{"m":73,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":55.6,"g":"B-","p":2.75},{"m":70,"g":"A-","p":3.5},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.54},{"roll":"251111848","batch":"B11","name":"Zumur Saha","courses":[{"m":95,"g":"A+","p":4},{"m":67,"g":"B+","p":3.25},{"m":68,"g":"B+","p":3.25},{"m":70,"g":"A-","p":3.5},{"m":70,"g":"A-","p":3.5},{"m":66,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.54},{"roll":"251111874","batch":"B11","name":"Mahbuba Naznin","courses":[{"m":85,"g":"A+","p":4},{"m":75,"g":"A","p":3.75},{"m":67,"g":"B+","p":3.25},{"m":75,"g":"A","p":3.75},{"m":40,"g":"D","p":2},{"m":68,"g":"B+","p":3.25},{"m":90,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.43},{"roll":"251111919","batch":"B11","name":"Zannatun Nayeem Tithy","courses":[{"m":40,"g":"D","p":2},{"m":71,"g":"A-","p":3.5},{"m":58,"g":"B-","p":2.75},{"m":70,"g":"A-","p":3.5},{"m":40.6,"g":"D","p":2},{"m":56,"g":"B-","p":2.75},{"m":85,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":2.93},{"roll":"251111991","batch":"B11","name":"Md. Al Amin Hossain","courses":[{"m":88,"g":"A+","p":4},{"m":65,"g":"B+","p":3.25},{"m":72,"g":"A-","p":3.5},{"m":70,"g":"A-","p":3.5},{"m":87.5,"g":"A+","p":4},{"m":72,"g":"A-","p":3.5},{"m":85,"g":"A+","p":4},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.68},{"roll":"251112075","batch":"B11","name":"Md. Zahirul Islam","courses":[{"m":66,"g":"B+","p":3.25},{"m":63,"g":"B","p":3},{"m":70,"g":"A-","p":3.5},{"m":75,"g":"A","p":3.75},{"m":66.3,"g":"B+","p":3.25},{"m":66,"g":"B+","p":3.25},{"m":0,"g":"F","p":0},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":2.86},{"roll":"251311197","batch":"B13","name":"Faizur Rashid","courses":[{"m":40.5,"g":"D","p":2},{"m":60,"g":"B","p":3},{"m":68,"g":"B+","p":3.25},{"m":70,"g":"A-","p":3.5},{"m":63.75,"g":"B","p":3},{"m":63,"g":"B","p":3},{"m":75,"g":"A","p":3.75},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null},{"m":null,"g":null,"p":null}],"cgpa":3.07}]};
+
+const norm = s => String(s).toLowerCase().replace(/[^a-z]/g,'');
+
+document.getElementById('form').addEventListener('submit', e=>{
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.style.display='none';
+  const roll = document.getElementById('roll').value.trim().replace(/\.0$/,'');
+  const nameIn = document.getElementById('nm').value.trim();
+  const st = DATA.students.find(s=>s.roll===roll);
+  if(!st){ err.textContent='No result found for this Roll No. Please check and try again.'; err.style.display='block'; return; }
+  const q = norm(nameIn);
+  if(q.length<4 || !norm(st.name).includes(q)){
+    err.textContent='Name verification failed. Type your name exactly as registered (at least 4 letters).';
+    err.style.display='block'; return;
+  }
+  show(st);
+});
+
+function show(st){
+  document.getElementById('rName').textContent = st.name;
+  document.getElementById('rRoll').textContent = st.roll;
+  document.getElementById('rBatch').textContent = st.batch;
+  document.getElementById('rCgpa').textContent = st.cgpa!=null ? st.cgpa.toFixed(2) : '—';
+  const tb = document.getElementById('tbody');
+  tb.innerHTML='';
+  const mods = ['One','Two','Three'];
+  mods.forEach(mod=>{
+    const idxs = DATA.meta.courses.map((c,i)=>[c,i]).filter(([c])=>c.module===mod);
+    if(!idxs.length) return;
+    const mr = document.createElement('tr');
+    mr.innerHTML = `<td class="mod" colspan="5">Module ${mod}</td>`;
+    tb.appendChild(mr);
+    idxs.forEach(([c,i])=>{
+      const r = st.courses[i];
+      const done = r.g!=null;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="l">${c.code !== c.title ? c.code+': '+c.title : c.title}</td>
+        <td>${c.credit}</td>
+        <td>${done && r.m!=null ? r.m : (done?'—':'<span class="pend">Pending</span>')}</td>
+        <td>${done ? r.g : '<span class="pend">Pending</span>'}</td>
+        <td>${done && r.p!=null ? Number(r.p).toFixed(2) : '<span class="pend">—</span>'}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+  document.getElementById('searchCard').scrollIntoView();
+  document.getElementById('result').style.display='block';
+  document.getElementById('result').scrollIntoView({behavior:'smooth'});
+}
+
+function reset_(){
+  document.getElementById('result').style.display='none';
+  document.getElementById('form').reset();
+  document.getElementById('roll').focus();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
